@@ -1,6 +1,25 @@
 import Conversation from '../models/conversation.model.js'
 import Message from '../models/message.model.js'
 
+export const getMessages = async (req, res) => {
+    try {
+        const { userToChatId } = req.params;
+        const currentUser = req.user._id;
+
+        const conversation = await Conversation.findOne({
+            participants: { $all: [currentUser, userToChatId] },
+        }).populate("messages");    // Brings actual messages instead of references
+
+        if(!conversation) return res.status(200).json([]);
+
+        const messages = conversation.messages;
+        res.status(200).json(messages);
+    } catch (error) {
+        console.log("Error in getMessages controller:", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
 export const sendMessage = async (req, res) => {
     try {
         const { message } = req.body;
